@@ -3,11 +3,11 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const {ApolloServer, gql} = require('apollo-server-express');
-const {merge} = require('loadash');
 
-const Usuario = require('./models/usuario')
+const Usuario = require('./models/usuario');
+const usuario = require('./models/usuario');
 
-mongoose.connect('mongodb+srv://sofiamanana:sofia56204@cluster0.ncfwni4.mongodb.net/bdwebmovil',{ userNewUrlParser: true, userUnifiedTopology: true});
+mongoose.connect('mongodb+srv://sofiamanana:sofia56204@cluster0.ncfwni4.mongodb.net/bdwebmovil');
 
 //pk = object id
 // !: se usa para indicar si es obligatorio o opcional el parámetro
@@ -47,16 +47,46 @@ const resolvers = {
         async getUsuarios(obj){
             const usuarios = await Usuario.find();
             return usuarios;
+        },
+        async getUsuario(obj, { id }){
+            const usuario = await Usuario.findById(id);
+            return usuario;
+        }
+    },
+    Mutation: {
+        async addUsuario(obj, { input }){
+            const usuario = new Usuario(input);
+            await usuario.save();
+            return usuario;
+        },
+        async updateUsuario(obj, { id, input }){
+            const usuario = await Usuario.findByIdAndUpdate(id, input);
+            return usuario;
+        },
+        async deleteUsuario(obj, { id }){
+            await Usuario.deleteOne({ _id: id});
+            return {
+                message: "Usuario Eliminado"
+            }
         }
     }
 };
 
-var root = { hello: () => 'Hello world!' };
+let apolloServer = null;
+const corsOptions = {
+    origin: "http://localhost:8090",
+    credentials: false
+}
 
-var app = express();
-app.use('/graphql', graphqlHTTP({
-  schema: schema,
-  rootValue: root,
-  graphiql: true,
-}));
-app.listen(4000, () => console.log('Now browse to localhost:4000/graphql'));
+async function startServer(){
+    const apolloServer = new ApolloServer({typeDefs, resolvers, corsOptions});
+    await apolloServer.start();
+
+    apolloServer.applyMiddleware({ app, cors: false});
+
+}
+startServer();
+
+const app = express();
+app.use(cors());
+app.listen(8090, () => console.log('Servidor Iniciado'));
