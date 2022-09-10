@@ -4,8 +4,18 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const {ApolloServer, gql} = require('apollo-server-express');
 
-const Usuario = require('./models/usuario');
-const usuario = require('./models/usuario');
+const Residente = require('./models/residente');
+const Administrador = require('./models/administrador')
+const Conserje = require('./models/conserje')
+const Estadodecuenta = require('./models/estadodecuenta')
+const Gastoscomunes = require('./models/gastoscomunes')
+const Instalacion = require('./models/instalacion')
+const Libroreservas= require('./models/libroreservas')
+const Multa = require('./models/multa')
+const Reserva = require('./models/reserva')
+const Residente = require('./models/Residente')
+
+
 
 mongoose.connect('mongodb+srv://sofiamanana:sofia56204@cluster0.ncfwni4.mongodb.net/bdwebmovil');
 
