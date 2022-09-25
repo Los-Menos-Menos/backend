@@ -7,14 +7,15 @@ const {ApolloServer, gql} = require('apollo-server-express');
 const Residente = require('./models/residente');
 const Administrador = require('./models/administrador')
 const Conserje = require('./models/conserje')
-const Estadodecuenta = require('./models/estadodecuenta')
-const Gastoscomunes = require('./models/gastoscomunes')
+const EstadoDeCuenta = require('./models/estadodecuenta')
+const GastosComunes = require('./models/gastoscomunes')
 const Instalacion = require('./models/instalacion')
-const Libroreservas= require('./models/libroreservas')
+const LibroReservas= require('./models/libroreservas')
 const Multa = require('./models/multa')
 const Reserva = require('./models/reserva')
-const Residente = require('./models/Residente')
-
+const Directiva = require('./models/directiva')
+const Anuncio = require('./models/anuncio');
+const residente = require('./models/residente');
 
 
 mongoose.connect('mongodb+srv://sofiamanana:sofia56204@cluster0.ncfwni4.mongodb.net/bdwebmovil');
@@ -22,30 +23,238 @@ mongoose.connect('mongodb+srv://sofiamanana:sofia56204@cluster0.ncfwni4.mongodb.
 //pk = object id
 // !: se usa para indicar si es obligatorio o opcional el parámetro
 const typeDefs = gql`
-    type Usuario{
+    type Administrador{
         id: ID!
+        nombre: String!
+        rut: Int!
         email: String!
-        pass: String!
+    }
+    
+    type Conserje{
+        id: ID!
+        nombre: String!
+        rut: Int!
+        email: String!
+    }
+    
+    type Directiva{
+        nombre: String
+        rut: Int!
+        email: String!
     }
 
-    input UsuarioInput{
+    type EstadoDeCuenta{
+        residente: Residente
+        morosidad: Boolean
+        multas: [Multa]
+        gastoscomuneslista: [GastosComunes]
+        reservas: [Reserva]
+    }
+    
+    type GastosComunes{
+        fecha: String!
+        monto: Int!
+        detalle: String
+        pagado: Boolean!
+    }
+    
+    type Instalacion{
+        nombre: String!
+        monto: Int!
+        reservas: [Reserva]
+    }
+    
+    type LibroReservas{
+        reservas: [Reserva]
+    }
+    
+    type Multa{
+        id: ID!
+        residente: Residente!
+        fecha: String!
+        monto: Int!
+        detalle: String!
+        pagado: Boolean!
+    }
+    
+    type Reserva{
+        fecha: String
+        pagado: Boolean
+        instalacion: Instalacion
+        residente: Residente
+    }
+
+    type Residente{
+        id: ID!
+        nombre: String!
+        rut: Int!
         email: String!
-        pass: String!
+        estadodecuenta: EstadoDeCuenta!
+    }
+
+    type Anuncio{
+        id: ID!
+        titulo: String!
+        mensaje: String!
+        fecha: String!
+        autor: String!
+    }
+
+    input AdminInput{
+        nombre: String
+        rut: Int
+        email: String
+    }
+
+    input AnuncioInput{
+        titulo: String
+        mensaje: String
+        fecha: String
+        autor: String
+    }
+    
+    input ConserjeInput{
+        nombre: String
+        rut: Int
+        email: String
+    }
+
+    input DirectivaInput{
+        nombre: String
+        rut: Int
+        email: String
+    }
+
+    input EstadoDeCuentaInput{
+        residente: ResidenteInput
+        morosidad: Boolean
+        multas: [MultaInput]
+        gastoscomuneslista: [GastosComunesInput]
+        reservas: [ReservaInput]
+    }
+    
+    input GastosComunesInput{
+        fecha: String
+        monto: Int
+        detalle: String
+        pagado: Boolean
+    }
+
+    input InstalacionInput{
+        nombre: String!
+        monto: Int!
+    }
+
+    input LibroReservasInput{
+        reservas: [ReservaInput]
+    }
+
+    input MultaInput{
+        residente: ResidenteInput
+        fecha: String
+        monto: Int
+        detalle: String
+        pagado: Boolean
+    }
+
+    input ReservaInput{
+        fecha: String
+        pagado: Boolean
+        instalacion: ID
+        residente: ID
+        estadodecuenta: ID
+    }
+
+    input ResidenteInput{
+        rut: Int
+        email: String
+        nombre: String
+        estadodecuenta: EstadoDeCuentaInput
     }
 
     type Alert{
         message: String
     }
-
+    
     type Query{
-        getUsuarios: [Usuario]
-        getUsuario(id: ID!) : Usuario
-    }
+        getAdministrador(id: ID!): Administrador
+        getAdministradores: [Administrador]
+        
+        getConserje(id: ID!): Conserje
+        getConserjes: [Conserje]
 
-    type Mutation {
-        addUsuario(input: UsuarioInput): Usuario
-        updateUsuario(id: ID!, input: UsuarioInput): Usuario
-        deleteUsuario(id: ID!): Alert
+        getDirectiva(id: ID!): Directiva
+        getDirectivas: [Directiva]
+
+        getEstadoDeCuenta(id: ID!): EstadoDeCuenta
+        getEstadosDeCuentas: [EstadoDeCuenta]
+        
+        getGastoComun(id: ID!): GastosComunes
+        getGastosComunes: [GastosComunes]
+
+        getInstalacion(id: ID!): Instalacion
+        getInstalaciones: [Instalacion]
+
+        getLibroReservas(id: ID!): LibroReservas
+        
+        
+        getMulta(id: ID!): Multa
+        getMultas: [Multa]
+
+        getReserva(id: ID!): Reserva
+        getReservas: [Reserva]
+
+        getResidente(id: ID!): Residente
+        getResidentes: [Residente]
+
+        getAnuncio(id: ID!): Anuncio
+        getAnuncios: [Anuncio]
+    }
+    
+    type Mutation{
+        addAdministrador(input: AdminInput): Administrador
+        updateAdministrador(id: ID!, input: AdminInput): Administrador
+        deleteAdministrador(id: ID!): Alert
+
+        addAnuncio(input: AnuncioInput): Anuncio
+        updateAnuncio(id: ID!, input: AdminInput): Anuncio
+        deleteAnuncio(id: ID!): Alert
+        
+        addConserje(input: ConserjeInput): Conserje
+        updateConserje(id: ID!, input: ConserjeInput): Conserje
+        deleteConserje(id: ID!): Alert
+        
+        addDirectiva(input: DirectivaInput): Directiva
+        updateDirectiva(id: ID!, input: DirectivaInput): Directiva
+        deleteDirectiva(id: ID!): Alert
+        
+        addEstadoDeCuenta(input: EstadoDeCuentaInput): EstadoDeCuenta
+        updateEstadoDeCuenta(id: ID!, input: EstadoDeCuentaInput): EstadoDeCuenta
+        deleteEstadoDeCuenta(id: ID!): Alert
+
+        addGastosComunes(input: GastosComunesInput): GastosComunes
+        updateGastosComunes(id: ID!, input: GastosComunesInput): GastosComunes
+        deleteGastosComunes(id: ID!): Alert
+
+        addInstalacion(input: InstalacionInput): Instalacion
+        updateInstalacion(id: ID!, input: InstalacionInput): Instalacion
+        deleteInstalacion(id: ID!): Alert
+
+        addLibroReservas(input: LibroReservasInput): LibroReservas
+        updateLibroReservas(id: ID!, input: LibroReservasInput): LibroReservas
+        deleteLibroReservas(id: ID!): Alert
+        
+        addMulta(input: MultaInput): Multa
+        updateMulta(id: ID!, input: MultaInput): Multa
+        deleteMulta(id: ID!): Alert
+
+        addReserva(input: ReservaInput): Reserva
+        updateReserva(id: ID!, input: ReservaInput) : Reserva 
+        deleteReserva(id: ID!): Alert
+
+        addResidente(input: ResidenteInput): Residente
+        updateResidente(id: ID!, input: ResidenteInput): Residente
+        deleteResidente(id: ID!): Alert
     }
 
 `
@@ -54,32 +263,320 @@ const typeDefs = gql`
 
 const resolvers = {
     Query: {
-        async getUsuarios(obj){
-            const usuarios = await Usuario.find();
-            return usuarios;
+        // query admin
+        async getAdministrador(obj,{id}){
+            const admin= await Administrador.findById(id);
+            return admin;
         },
-        async getUsuario(obj, { id }){
-            const usuario = await Usuario.findById(id);
-            return usuario;
-        }
+        async getAdministradores(obj){
+            const admins= await Administrador.find();
+            return admins;
+        },
+        //query conserje
+        async getConserje(obj,{id}){
+            const conserje = Conserje.findById(id);
+            return conserje;
+        },
+        async getConserjes(obj){
+            const conserjes= await Conserje.find();
+            return conserjes;
+        },
+        //query directiva
+        async getDirectiva(obj,{id}){
+            const directiva = Directiva.findById(id);
+            return directiva;
+        },
+        async getDirectivas(obj){
+            const directiva = await Directiva.find();
+            return directiva;
+        },
+
+        //query estadodecuenta
+        async getEstadoDeCuenta(obj,{id}){
+            const estadodecuenta = EstadoDeCuenta.findById(id);
+            return estadodecuenta;
+        },
+        async getEstadosDeCuentas(obj){
+            const estadodecuenta = await EstadoDeCuenta.find();
+            return estadodecuenta;
+        },
+        //query gastoscomunes
+        async getGastoComun(obj,{id}){
+            const gastocomun = GastosComunes.findById(id);
+            return gastocomun;
+        },
+        async getGastosComunes(obj){
+            const gastoscomunes= await GastosComunes.find();
+            return gastoscomunes;
+        },
+
+        //query instalacion
+        async getInstalacion(obj,{id}){
+            const instalacion = Instalacion.findById(id);
+            return instalacion;
+        },
+        async getInstalaciones(obj){
+            const instalaciones= await Instalacion.find();
+            return instalaciones;
+        },
+        //query libroreservas
+        async getLibroReservas(obj, { id }){
+            const libroreservas = await LibroReservas.findById(id);
+            return libroreservas;
+        },
+        //query multas
+        async getMultas(obj){
+            const multas = await Multa.find();
+            return multas;
+        },
+        async getMulta(obj, { id }){
+            const multa = await Multa.findById(id);
+            return multa;
+        },
+        //query reserva
+        async getReservas(obj){
+            const reservas = await Reserva.find();
+            return reservas;
+        },
+        async getReserva(obj, { id }){
+            const reserva = await Reserva.findById(id);
+            return reserva;
+        },
+
+        //query residente
+        async getResidente(obj,{id}){
+            const residente = Residente.findById(id);
+            return residente;
+        },
+        async getResidentes(obj){
+            const residentes= await Residente.find();
+            return residentes;
+        },
+
+         //query anuncios
+         async getAnuncio(obj,{id}){
+            const anuncio = Anuncio.findById(id);
+            return anuncio;
+        },
+        async getAnuncios(obj){
+            const anuncios= await Anuncio.find();
+            return anuncios;
+        },
     },
+    
     Mutation: {
-        async addUsuario(obj, { input }){
-            const usuario = new Usuario(input);
-            await usuario.save();
-            return usuario;
+        //mutation administrador
+        async updateAdministrador(obj, { id, input }){
+            const Administrador = await Administrador.findByIdAndUpdate(id, input);
+            return Administrador;
         },
-        async updateUsuario(obj, { id, input }){
-            const usuario = await Usuario.findByIdAndUpdate(id, input);
-            return usuario;
-        },
-        async deleteUsuario(obj, { id }){
-            await Usuario.deleteOne({ _id: id});
+        async deleteAdministrador(obj, { id }){
+            await Administrador.deleteOne({ _id: id});
             return {
-                message: "Usuario Eliminado"
+                message: "Administrador Eliminado"
             }
-        }
-    }
+        },
+        async addAdministrador(obj, { input }){
+            const Administrador = new Administrador(input);
+            await administrador.save();
+            return Administrador;
+        },
+
+        //mutation conserje
+        async updateConserje(obj, { id, input }){
+            const conserje = await Conserje.findByIdAndUpdate(id, input);
+            return conserje;
+        },
+        async deleteConserje(obj, { id }){
+            await Conserje.deleteOne({ _id: id});
+            return {
+                message: "Conserje Eliminado"
+            }
+        },
+        async addConserje(obj, { input }){
+            const conserje = new Conserje(input);
+            await conserje.save();
+            return conserje;
+        },
+
+        //mutation directiva
+        async updateDirectiva(obj, { id, input }){
+            const directiva = await Directiva.findByIdAndUpdate(id, input);
+            return directiva;
+        },
+        async deleteDirectiva(obj, { id }){
+            await Directiva.deleteOne({ _id: id});
+            return {
+                message: "Directiva Eliminada"
+            }
+        },
+        async addDirectiva(obj, { input }){
+            const directiva = new Directiva(input);
+            await directiva.save();
+            return directiva;
+        },
+        //mutation estadodecuenta
+        async updateEstadoDeCuenta(obj, { id, input }){
+            const estadodecuenta = await EstadoDeCuenta.findByIdAndUpdate(id, input);
+            return estadodecuenta;
+        },
+        async deleteEstadoDeCuenta(obj, { id }){
+            await EstadoDeCuenta.deleteOne({ _id: id});
+            return {
+                message: "EstadoDeCuenta Eliminado"
+            }
+        },
+        async addEstadoDeCuenta(obj, { input }){
+            const estadodecuenta = new EstadoDeCuenta(input);
+            await estadodecuenta.save();
+            return estadodecuenta;
+        }, 
+        //mutation gastoscomunes
+        async updateGastosComunes(obj, { id, input }){
+            const gastoscomunes = await GastosComunes.findByIdAndUpdate(id, input);
+            return gastoscomunes;
+        },
+        async deleteGastosComunes(obj, { id }){
+            await GastosComunes.deleteOne({ _id: id});
+            return {
+                message: "Gasto Comun Eliminado"
+            }
+        },
+        async addGastosComunes(obj, { input }){
+            const gastoscomunes = new GastosComunes(input);
+            await gastoscomunes.save();
+            return gastoscomunes;
+        },
+        
+        //mutation instalacion
+        async updateInstalacion(obj, { id, input }){
+            const instalacion = await Instalacion.findByIdAndUpdate(id, input);
+            return instalacion;
+        },
+        async deleteInstalacion(obj, { id }){
+            await Instalacion.deleteOne({ _id: id});
+            return {
+                message: "Instalacion Eliminada"
+            }
+        },
+        async addInstalacion(obj, { input }){
+            const instalacion = new Instalacion(input);
+            await instalacion.save();
+            return instalacion;
+        }, 
+        //mutation libroreservas
+        async updateLibroReservas(obj, { id, input }){
+            const libroreservas = await LibroReservas.findByIdAndUpdate(id, input);
+            return libroreservas;
+        },
+        async deleteLibroReservas(obj, { id }){
+            await LibroReservas.deleteOne({ _id: id});
+            return {
+                message: "Libro de reservas Eliminado"
+            }
+        },
+        async addLibroReservas(obj, { input }){
+            const libroReservas = new LibroReservas(input);
+            await libroReservas.save();
+            return libroReservas;
+        }, 
+        //mutation multas
+        async updateMulta(obj, { id, input }){
+            const multa = await Multa.findByIdAndUpdate(id, input);
+            return multa;
+        },
+        async deleteMulta(obj, { id }){
+            await Multa.deleteOne({ _id: id});
+            return {
+                message: "Multa Eliminada"
+            }
+        },
+        async addMulta(obj, { input }){
+            const multa = new Multa(input);
+            await multa.save();
+            return multa;
+        },
+        
+        //mutation reserva
+        async updateReserva(obj, { id, input }){
+            const reserva = await Reserva.findByIdAndUpdate(id, input);
+            return reserva;
+        },
+        async deleteReserva(obj, { id }){
+            await Reserva.deleteOne({ _id: id});
+            return {
+                message: "Reserva Eliminada"
+            }
+        },
+        async addReserva(obj, { input }){
+            const residenteObjeto = await Residente.findById(input.residente);
+            const instalacionObjeto = await Instalacion.findById(input.instalacion);
+            const LibroObjeto = await LibroReservas.findById("6330d13b8fd77b5585c63f4b")
+            const estadodecuentaObjeto = await EstadoDeCuenta.findById(input.estadodecuenta);
+            input.residente = residenteObjeto;
+            input.instalacion = instalacionObjeto;
+            input.fecha = new Date();
+            var inputNuevo = {
+                fecha: input.fecha,
+                pagado: input.pagado
+            }
+            const reservaObjeto = new Reserva(inputNuevo);
+            reservaObjeto.residente = residenteObjeto;
+            reservaObjeto.instalacion = instalacionObjeto;
+            if (estadodecuentaObjeto.reservas === undefined){
+                estadodecuentaObjeto.reservas = [];
+            }
+            estadodecuentaObjeto.reservas.push(reservaObjeto)
+            if (LibroObjeto.reservas === undefined){
+                LibroObjeto.reservas = [];
+            }
+            LibroObjeto.reservas.push(reservaObjeto);
+            await reservaObjeto.save();
+            await LibroObjeto.save();
+            await estadodecuentaObjeto.save();
+            return reservaObjeto;
+        },
+
+        //mutation residente
+        async updateResidente(obj, { id, input }){
+            const residente = await Residente.findByIdAndUpdate(id, input);
+            return residente;
+        },
+        async deleteResidente(obj, { id }){
+            await Residente.deleteOne({ _id: id});
+            return {
+                message: "Residente Eliminado"
+            }
+        },
+        async addResidente(obj, { input }){
+            const residenteObjeto = new Residente(input);
+            const estadodecuentaObjeto = new EstadoDeCuenta({
+                residente: residenteObjeto,
+                morosidad: false,
+            });
+            residenteObjeto.estadodecuenta = estadodecuentaObjeto;
+            await estadodecuentaObjeto.save();
+            await residenteObjeto.save();
+            return residenteObjeto;
+        }, 
+        
+        //mutation anuncio
+        async updateAnuncio(obj, { id, input }){
+            const anuncio = await Anuncio.findByIdAndUpdate(id, input);
+            return anuncio;
+        },
+        async deleteAnuncio(obj, { id }){
+            await Anuncio.deleteOne({ _id: id});
+            return {
+                message: "Anuncio Eliminado"
+            }
+        },
+        async addAnuncio(obj, { input }){
+            const anuncio = new Anuncio(input);
+            await anuncio.save();
+            return anuncio;
+        },
+    },
 };
 
 let apolloServer = null;
