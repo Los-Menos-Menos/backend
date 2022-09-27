@@ -166,7 +166,7 @@ const typeDefs = gql`
     }
 
     input ReservaInput{
-        fecha: String
+        fecha: FechaInput
         pagado: Boolean
         instalacion: ID
         residente: ID
@@ -584,9 +584,10 @@ const resolvers = {
             const estadodecuentaObjeto = await EstadoDeCuenta.findById(input.estadodecuenta);
             input.residente = residenteObjeto;
             input.instalacion = instalacionObjeto;
-            input.fecha = new Date();
+            // console.log(input.fecha);
+            let fechaISO = new Date(input.fecha.anio, input.fecha.mes, input.fecha.dia, input.fecha.hora);
             var inputNuevo = {
-                fecha: input.fecha,
+                fecha: fechaISO,
                 pagado: input.pagado
             }
             const reservaObjeto = new Reserva(inputNuevo);
@@ -646,6 +647,8 @@ const resolvers = {
             }
         },
         async addAnuncio(obj, { input }){
+            const fechaAnuncio = new Date().toISOString();
+            input.fecha = fechaAnuncio;
             const anuncio = new Anuncio(input);
             await anuncio.save();
             return anuncio;
