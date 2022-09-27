@@ -38,12 +38,14 @@ const typeDefs = gql`
     }
     
     type Directiva{
+        id: ID!
         nombre: String
         rut: Int!
         email: String!
     }
 
     type EstadoDeCuenta{
+        id: ID!
         residente: Residente
         morosidad: Boolean
         multas: [Multa]
@@ -52,6 +54,7 @@ const typeDefs = gql`
     }
     
     type GastosComunes{
+        id: ID!
         fecha: String!
         monto: Int!
         detalle: String
@@ -59,12 +62,15 @@ const typeDefs = gql`
     }
     
     type Instalacion{
+        id: ID!
         nombre: String!
         monto: Int!
         reservas: [Reserva]
+        estado: String!
     }
     
     type LibroReservas{
+        id: ID!
         reservas: [Reserva]
     }
     
@@ -78,6 +84,7 @@ const typeDefs = gql`
     }
     
     type Reserva{
+        id: ID!
         fecha: String
         pagado: Boolean
         instalacion: Instalacion
@@ -143,6 +150,7 @@ const typeDefs = gql`
     input InstalacionInput{
         nombre: String!
         monto: Int!
+        estado: String!
     }
 
     input LibroReservasInput{
@@ -170,6 +178,13 @@ const typeDefs = gql`
         email: String
         nombre: String
         estadodecuenta: EstadoDeCuentaInput
+    }
+
+    input FechaInput{
+        anio: Int
+        mes: Int
+        dia: Int
+        hora: Int
     }
 
     type Alert{
@@ -209,6 +224,10 @@ const typeDefs = gql`
 
         getAnuncio(id: ID!): Anuncio
         getAnuncios: [Anuncio]
+
+        getAreasLibres(input: FechaInput): [Instalacion]
+
+        getMorosos: [Residente]
     }
     
     type Mutation{
@@ -361,6 +380,56 @@ const resolvers = {
         async getAnuncios(obj){
             const anuncios= await Anuncio.find();
             return anuncios;
+        },
+        //query areas libres
+        async getAreasLibres(obj, {input}){
+            // Transformar fecha string a fecha ISO
+            console.log(input.anio, input.mes, input.dia, input.hora);
+            const fechaISO = new Date(input.anio,input.mes,input.dia,input.hora).toISOString();
+            // Todas las instalaciones
+            const instalaciones = await Instalacion.find();
+            // Buscamos entre sus reservas la fecha
+            let areasOcupadas = [];
+            // console.log(instalaciones.length)
+            for (let i = 0; i < instalaciones.length; i++) {
+                const reservas = await Reserva.find();
+                for (let j = 0; j < reservas.length; j++) {
+                    const uno = new Date(reservas[j].fecha).getTime();
+                    const dos = new Date(fechaISO).getTime();
+                    if(uno - dos === 0){
+                        // console.log("Instalacion ocupada");
+                        areasOcupadas.push(instalaciones[i]);
+                    }
+                    else{
+                        // console.log("Instalacion libre");
+                    }
+                }
+            }
+            // Ver cuales estan libres
+            let areasLibres = [];
+            for (let i = 0; i < instalaciones.length; i++) {
+                let ocupada = false;
+                for (let j = 0; j < areasOcupadas.length; j++) {
+                    if(instalaciones[i].id == areasOcupadas[j].id){
+                        ocupada = true;
+                    }
+                }
+                if(!ocupada){
+                    areasLibres.push(instalaciones[i]);
+                }
+            }
+            return areasLibres;
+        },
+        //query get morosos
+        async getMorosos(obj){
+            const morosos = await EstadoDeCuenta.find({morosidad: true});
+            // Por cada id de residente en morosos, buscar el residente y agregarlo a un arreglo
+            const residentesMorosos = [];
+            for (let i = 0; i < morosos.length; i++) {
+                const residente = await Residente.findById(morosos[i].residente);
+                residentesMorosos.push(residente);
+            }
+            return residentesMorosos;
         },
     },
     
@@ -531,9 +600,14 @@ const resolvers = {
                 LibroObjeto.reservas = [];
             }
             LibroObjeto.reservas.push(reservaObjeto);
+            if (instalacionObjeto.reservas === undefined){
+                instalacionObjeto.reservas = [];
+            }
+            instalacionObjeto.reservas.push(reservaObjeto);
             await reservaObjeto.save();
             await LibroObjeto.save();
             await estadodecuentaObjeto.save();
+            await instalacionObjeto.save();
             return reservaObjeto;
         },
 
