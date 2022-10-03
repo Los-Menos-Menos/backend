@@ -59,6 +59,7 @@ const typeDefs = gql`
         monto: Int!
         detalle: String
         pagado: Boolean!
+        residente: Residente!
     }
     
     type Instalacion{
@@ -141,10 +142,12 @@ const typeDefs = gql`
     }
     
     input GastosComunesInput{
-        fecha: String
+        fecha: FechaInput
         monto: Int
         detalle: String
         pagado: Boolean
+        residente: ID
+        estadodecuenta: ID
     }
 
     input InstalacionInput{
@@ -496,24 +499,73 @@ const resolvers = {
             }
         },
         async addEstadoDeCuenta(obj, { input }){
+            const fechaGastosComunes = new Date().toISOString();
+            input.fecha = fechaGastosComunes;
             const estadodecuenta = new EstadoDeCuenta(input);
             await estadodecuenta.save();
             return estadodecuenta;
         }, 
         //mutation gastoscomunes
         async updateGastosComunes(obj, { id, input }){
-            const gastoscomunes = await GastosComunes.findByIdAndUpdate(id, input);
+            let fechaISO = new Date(input.fecha.anio, input.fecha.mes);
+            var inputNuevo = {
+                fecha: fechaISO,
+                pagado: input.pagado,
+                residente: input.residente,
+                estadodecuenta: input.estadodecuenta,
+                monto: input.monto,
+                detalle: input.detalle
+            }
+            const gastoscomunes = await GastosComunes.findByIdAndUpdate(id, inputNuevo);
             return gastoscomunes;
         },
+        // no esta quitando del array de gastos comunes en el estado de cuenta
         async deleteGastosComunes(obj, { id }){
+            const estadosDeCuenta = await EstadoDeCuenta.find();
+
+            for (let i = 0; i < estadosDeCuenta.length; i++){
+                let listaGastosComunes = estadosDeCuenta[i].gastoscomuneslista;
+                
+                if (listaGastosComunes.includes(id)){
+                    //console.log("se supone que borra del array");
+                    listaGastosComunes = listaGastosComunes.filter(e => e !== id);
+                    //let idEstadoCuenta = estadosDeCuenta[i].id;
+                    var inputNuevo = {
+                        gastoscomuneslista: listaGastosComunes
+                    }
+                    await EstadoDeCuenta.findByIdAndUpdate(estadosDeCuenta[i].id, inputNuevo);
+                }
+
+            }
             await GastosComunes.deleteOne({ _id: id});
             return {
                 message: "Gasto Comun Eliminado"
             }
         },
         async addGastosComunes(obj, { input }){
-            const gastoscomunes = new GastosComunes(input);
+            const residenteObjeto = await Residente.findById(input.residente);
+            const estadodecuentaObjeto = await EstadoDeCuenta.findById(input.estadodecuenta);
+            // cambia la referencia por el objeto
+            input.residente = residenteObjeto;
+            input.estadodecuenta = estadodecuentaObjeto;
+            let fechaISO = new Date(input.fecha.anio, input.fecha.mes);
+            var inputNuevo = {
+                fecha: fechaISO,
+                pagado: input.pagado,
+                residente: input.residente,
+                estadodecuenta: input.estadodecuenta,
+                monto: input.monto,
+                detalle: input.detalle
+            }
+            const gastoscomunes = new GastosComunes(inputNuevo);
+            if (estadodecuentaObjeto.gastoscomuneslista == undefined){
+                estadodecuentaObjeto.gastoscomuneslista = [];
+            }
+            estadodecuentaObjeto.gastoscomuneslista.push(gastoscomunes);
+            
             await gastoscomunes.save();
+            await estadodecuentaObjeto.save();
+
             return gastoscomunes;
         },
         
