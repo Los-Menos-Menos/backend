@@ -519,7 +519,6 @@ const resolvers = {
             const gastoscomunes = await GastosComunes.findByIdAndUpdate(id, inputNuevo);
             return gastoscomunes;
         },
-        // no esta quitando del array de gastos comunes en el estado de cuenta
         async deleteGastosComunes(obj, { id }){
             await GastosComunes.deleteOne({ _id: id});
             return {
