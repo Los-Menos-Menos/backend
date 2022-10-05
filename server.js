@@ -521,22 +521,6 @@ const resolvers = {
         },
         // no esta quitando del array de gastos comunes en el estado de cuenta
         async deleteGastosComunes(obj, { id }){
-            const estadosDeCuenta = await EstadoDeCuenta.find();
-
-            for (let i = 0; i < estadosDeCuenta.length; i++){
-                let listaGastosComunes = estadosDeCuenta[i].gastoscomuneslista;
-                
-                if (listaGastosComunes.includes(id)){
-                    //console.log("se supone que borra del array");
-                    listaGastosComunes = listaGastosComunes.filter(e => e !== id);
-                    //let idEstadoCuenta = estadosDeCuenta[i].id;
-                    var inputNuevo = {
-                        gastoscomuneslista: listaGastosComunes
-                    }
-                    await EstadoDeCuenta.findByIdAndUpdate(estadosDeCuenta[i].id, inputNuevo);
-                }
-
-            }
             await GastosComunes.deleteOne({ _id: id});
             return {
                 message: "Gasto Comun Eliminado"
