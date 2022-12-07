@@ -596,6 +596,19 @@ const resolvers = {
             }
         },
         async addMulta(obj, { input }){
+            //input rut
+            const rut = input.residente.rut;
+            const residente = await Residente.findOne({ rut: rut });
+            input.residente = residente;
+            const estadodecuenta = await EstadoDeCuenta.findOne({ residente: residente });
+            input.estadodecuenta = estadodecuenta;
+         /*    let fechaISO = new Date().toISOString();
+            input.fecha = {
+                fecha: fechaISO,
+            } */
+            const fecha = new Date().toISOString();
+            input.fecha = fecha;
+
             const multa = new Multa(input);
             await multa.save();
             return multa;
