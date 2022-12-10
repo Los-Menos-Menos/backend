@@ -134,11 +134,11 @@ const typeDefs = gql`
     }
 
     input EstadoDeCuentaInput{
-        residente: ResidenteInput
+        residente: ID
         morosidad: Boolean
-        multas: [MultaInput]
-        gastoscomuneslista: [GastosComunesInput]
-        reservas: [ReservaInput]
+        multas: [ID]
+        gastoscomuneslista: [ID]
+        reservas: [ID]
     }
     
     input GastosComunesInput{
@@ -180,7 +180,6 @@ const typeDefs = gql`
         rut: Int
         email: String
         nombre: String
-        estadodecuenta: EstadoDeCuentaInput
     }
 
     input FechaInput{
@@ -666,7 +665,8 @@ const resolvers = {
             return residente;
         },
         async deleteResidente(obj, { id }){
-            await Residente.deleteOne({ rut: id});
+            console.log(id, "id en el backend");
+            await Residente.findByIdAndRemove(id);
             return {
                 message: "Residente Eliminado"
             }
@@ -677,7 +677,7 @@ const resolvers = {
                 residente: residenteObjeto,
                 morosidad: false,
             });
-            residenteObjeto.estadodecuenta = estadodecuentaObjeto;
+            residenteObjeto.estadodecuenta = estadodecuentaObjeto.id;
             await estadodecuentaObjeto.save();
             await residenteObjeto.save();
             return residenteObjeto;
