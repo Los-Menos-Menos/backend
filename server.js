@@ -97,7 +97,7 @@ const typeDefs = gql`
         nombre: String!
         rut: Int!
         email: String!
-        estadodecuenta: EstadoDeCuenta!
+        estadodecuenta: ID!
     }
 
     type Anuncio{
@@ -666,7 +666,7 @@ const resolvers = {
             return residente;
         },
         async deleteResidente(obj, { id }){
-            await Residente.deleteOne({ _id: id});
+            await Residente.deleteOne({ rut: id});
             return {
                 message: "Residente Eliminado"
             }
