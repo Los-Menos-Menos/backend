@@ -59,20 +59,20 @@ const typeDefs = gql`
         monto: Int!
         detalle: String
         pagado: Boolean!
-        residente: Residente!
+        residente: ID!
     }
     
     type Instalacion{
         id: ID!
         nombre: String!
         monto: Int!
-        reservas: [Reserva]
+        reservas: [ID]
         estado: String!
     }
     
     type LibroReservas{
         id: ID!
-        reservas: [Reserva]
+        reservas: [ID]
     }
     
     type Multa{
@@ -88,8 +88,8 @@ const typeDefs = gql`
         id: ID!
         fecha: String
         pagado: Boolean
-        instalacion: Instalacion
-        residente: Residente
+        instalacion: ID
+        residente: ID
     }
 
     type Residente{
@@ -554,11 +554,7 @@ const resolvers = {
             }
         },
         async addGastosComunes(obj, { input }){
-            const residenteObjeto = await Residente.findById(input.residente);
             const estadodecuentaObjeto = await EstadoDeCuenta.findById(input.estadodecuenta);
-            // cambia la referencia por el objeto
-            input.residente = residenteObjeto;
-            input.estadodecuenta = estadodecuentaObjeto;
             let fechaISO = new Date(input.fecha.anio, input.fecha.mes);
             var inputNuevo = {
                 fecha: fechaISO,
@@ -654,21 +650,13 @@ const resolvers = {
             }
         },
         async addReserva(obj, { input }){
-            const residenteObjeto = await Residente.findById(input.residente);
             const instalacionObjeto = await Instalacion.findById(input.instalacion);
             const LibroObjeto = await LibroReservas.findById("6330d13b8fd77b5585c63f4b")
             const estadodecuentaObjeto = await EstadoDeCuenta.findById(input.estadodecuenta);
-            input.residente = residenteObjeto;
-            input.instalacion = instalacionObjeto;
             // console.log(input.fecha);
             let fechaISO = new Date(input.fecha.anio, input.fecha.mes, input.fecha.dia, input.fecha.hora);
-            var inputNuevo = {
-                fecha: fechaISO,
-                pagado: input.pagado
-            }
-            const reservaObjeto = new Reserva(inputNuevo);
-            reservaObjeto.residente = residenteObjeto;
-            reservaObjeto.instalacion = instalacionObjeto;
+            input.fecha = fechaISO;
+            const reservaObjeto = new Reserva(input);
             if (estadodecuentaObjeto.reservas === undefined){
                 estadodecuentaObjeto.reservas = [];
             }
