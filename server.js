@@ -161,8 +161,8 @@ const typeDefs = gql`
     }
 
     input MultaInput{
-        residente: ResidenteInput
-        fecha: String
+        residente: ID!
+        fecha: FechaInput
         monto: Int
         detalle: String
         pagado: Boolean
@@ -620,20 +620,16 @@ const resolvers = {
             }
         },
         async addMulta(obj, { input }){
-            //input rut
-            const rut = input.residente.rut;
-            const residente = await Residente.findOne({ rut: rut });
-            input.residente = residente;
+            const residente = await Residente.findById(input.residente);
             const estadodecuenta = await EstadoDeCuenta.findOne({ residente: residente });
-            input.estadodecuenta = estadodecuenta;
-         /*    let fechaISO = new Date().toISOString();
-            input.fecha = {
-                fecha: fechaISO,
-            } */
-            const fecha = new Date().toISOString();
-            input.fecha = fecha;
-
+            let fechaISO = new Date(input.fecha.anio, input.fecha.mes, input.fecha.dia, input.fecha.hora);
+            input.fecha = fechaISO;
             const multa = new Multa(input);
+            if (estadodecuenta.multas === undefined){
+                estadodecuenta.multas = [];
+            }
+            estadodecuenta.multas.push(multa)
+            await estadodecuenta.save();
             await multa.save();
             return multa;
         },
