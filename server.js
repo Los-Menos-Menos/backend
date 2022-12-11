@@ -46,11 +46,11 @@ const typeDefs = gql`
 
     type EstadoDeCuenta{
         id: ID!
-        residente: Residente
+        residente: ID
         morosidad: Boolean
-        multas: [Multa]
-        gastoscomuneslista: [GastosComunes]
-        reservas: [Reserva]
+        multas: [ID]
+        gastoscomuneslista: [ID]
+        reservas: [ID]
     }
     
     type GastosComunes{
@@ -77,7 +77,7 @@ const typeDefs = gql`
     
     type Multa{
         id: ID!
-        residente: Residente!
+        residente: ID!
         fecha: String!
         monto: Int!
         detalle: String!
@@ -432,7 +432,7 @@ const resolvers = {
                 residentesMorosos.push(residente);
             }
             return residentesMorosos;
-        },
+        }
     },
     
     Mutation: {
@@ -448,9 +448,9 @@ const resolvers = {
             }
         },
         async addAdministrador(obj, { input }){
-            const Administrador = new Administrador(input);
+            const administrador = new Administrador(input);
             await administrador.save();
-            return Administrador;
+            return administrador;
         },
 
         //mutation conserje
@@ -492,7 +492,36 @@ const resolvers = {
             return estadodecuenta;
         },
         async deleteEstadoDeCuenta(obj, { id }){
-            await EstadoDeCuenta.deleteOne({ _id: id});
+            // get all EstadoDeCuenta
+            const estadodecuentas = await EstadoDeCuenta.find();
+            // get all residentes
+            const residentes = await Residente.find();
+            // check whichs estado de cuenta are not in use
+            let estadodecuentasInUse = [];
+            for (let i = 0; i < residentes.length; i++) {
+                for (let j = 0; j < estadodecuentas.length; j++) {
+                    if(residentes[i].estadodecuenta == estadodecuentas[j].id){
+                        estadodecuentasInUse.push(estadodecuentas[j]);
+                    }
+                }
+            }
+            // check whichs estado de cuenta are not in use
+            let estadodecuentasNotInUse = [];
+            for (let i = 0; i < estadodecuentas.length; i++) {
+                let inUse = false;
+                for (let j = 0; j < estadodecuentasInUse.length; j++) {
+                    if(estadodecuentas[i].id == estadodecuentasInUse[j].id){
+                        inUse = true;
+                    }
+                }
+                if(!inUse){
+                    estadodecuentasNotInUse.push(estadodecuentas[i]);
+                }
+            }
+            // delete the one that is not in use
+            for (let i = 0; i < estadodecuentasNotInUse.length; i++) {
+                await EstadoDeCuenta.deleteOne({ _id: estadodecuentasNotInUse[i].id});
+            }
             return {
                 message: "EstadoDeCuenta Eliminado"
             }
@@ -665,7 +694,22 @@ const resolvers = {
             return residente;
         },
         async deleteResidente(obj, { id }){
-            console.log(id, "id en el backend");
+            var res = Residente.findById(id);
+            var estadodecuenta = EstadoDeCuenta.findById(res.estadodecuenta);
+            var reservas = estadodecuenta.reservas;
+            var multas = estadodecuenta.multas;
+            var gastoscomunes = estadodecuenta.gastoscomunes;
+            for (var i = 0; i < gastoscomunes.length; i++){
+                await GastosComunes.deleteOne({ _id: gastoscomunes[i].id});
+            }
+            for (var i = 0; i < multas.length; i++){
+                await Multa.deleteOne({ _id: multas[i].id});
+            }
+            for (var i = 0; i < reservas.length; i++){
+                await Reserva.deleteOne({ _id: reservas[i].id});
+
+            }
+            await EstadoDeCuenta.deleteOne({ _id: estadodecuenta.id});
             await Residente.findByIdAndRemove(id);
             return {
                 message: "Residente Eliminado"
