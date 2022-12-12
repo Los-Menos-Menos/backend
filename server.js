@@ -683,15 +683,20 @@ const resolvers = {
             var reservas = estadodecuenta.reservas;
             var multas = estadodecuenta.multas;
             var gastoscomunes = estadodecuenta.gastoscomunes;
-            for (var i = 0; i < gastoscomunes.length; i++){
-                await GastosComunes.deleteOne({ _id: gastoscomunes[i].id});
+            if (gastoscomunes !== undefined){
+                for (var i = 0; i < gastoscomunes.length; i++){
+                    await GastosComunes.deleteOne({ _id: gastoscomunes[i].id});
+                }
             }
-            for (var i = 0; i < multas.length; i++){
-                await Multa.deleteOne({ _id: multas[i].id});
+            if (multas !== undefined){
+                for (var i = 0; i < multas.length; i++){
+                    await Multa.deleteOne({ _id: multas[i].id});
+                }
             }
-            for (var i = 0; i < reservas.length; i++){
-                await Reserva.deleteOne({ _id: reservas[i].id});
-
+            if (reservas !== undefined){
+                for (var i = 0; i < reservas.length; i++){
+                    await Reserva.deleteOne({ _id: reservas[i].id});
+                }
             }
             await EstadoDeCuenta.deleteOne({ _id: estadodecuenta.id});
             await Residente.findByIdAndRemove(id);
@@ -706,6 +711,9 @@ const resolvers = {
                 morosidad: false,
             });
             residenteObjeto.estadodecuenta = estadodecuentaObjeto.id;
+            residenteObjeto.multas = [];
+            residenteObjeto.reservas = [];
+            residenteObjeto.gastoscomunes = [];
             await estadodecuentaObjeto.save();
             await residenteObjeto.save();
             return residenteObjeto;
