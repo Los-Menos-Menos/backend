@@ -162,7 +162,7 @@ const typeDefs = gql`
 
     input MultaInput{
         residente: ID!
-        fecha: FechaInput
+        fecha: String
         monto: Int
         detalle: String
         pagado: Boolean
@@ -622,7 +622,7 @@ const resolvers = {
         async addMulta(obj, { input }){
             const residente = await Residente.findById(input.residente);
             const estadodecuenta = await EstadoDeCuenta.findOne({ residente: residente });
-            let fechaISO = new Date(input.fecha.anio, input.fecha.mes, input.fecha.dia, input.fecha.hora);
+            let fechaISO = new Date().toISOString();
             input.fecha = fechaISO;
             const multa = new Multa(input);
             if (estadodecuenta.multas === undefined){
